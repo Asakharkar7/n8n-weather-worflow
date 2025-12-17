@@ -38,22 +38,23 @@ This authenticates inserts into your Supabase database.
 ---
 
 ## 2. Supabase Details
-Create a table (e.g., weather_logs) with columns matching the workflow output:
+###Create a table (e.g., weather_logs) with columns matching the workflow output:
 
 Code
 run_at, city, temperature, temperature_unit, condition, humidity,
 wind_speed, wind_direction, cloudiness, feels_like, temp_min, temp_max,
 pressure, visibility, sunrise, sunset, rain_1h, snow_1h,
 alert_type, summary, raw_response
-Types:
 
-numeric → temperatures and precipitation
+### Types:
 
-integer → pressure, visibility, wind direction
+- numeric → temperatures and precipitation
 
-text → summary, sunrise, sunset, raw_response
+- integer → pressure, visibility, wind direction
 
-Ensure Row Level Security (RLS) is disabled or policies allow inserts.
+- text → summary, sunrise, sunset, raw_response
+
+- Ensure Row Level Security (RLS) is disabled or policies allow inserts.
 
 ---
 
@@ -62,7 +63,7 @@ Ensure Row Level Security (RLS) is disabled or policies allow inserts.
 
 - Configure credentials (SMTP server, port, username/password or OAuth).
 
-Map workflow output:
+### Map workflow output:
 
 - Subject: include alert_type (e.g., Weather Alert: Frost in Boston)
 
