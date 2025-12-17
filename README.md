@@ -38,12 +38,12 @@ This authenticates inserts into your Supabase database.
 ---
 
 ## 2. Supabase Details
-###Create a table (e.g., weather_logs) with columns matching the workflow output:
+### Create a table (e.g., weather_logs) with columns matching the workflow output:
 
 Code
 run_at, city, temperature, temperature_unit, condition, humidity,
 wind_speed, wind_direction, cloudiness, feels_like, temp_min, temp_max,
-pressure, visibility, sunrise, sunset, rain_1h, snow_1h,
+pressure, visibility, sunrise, sunset,
 alert_type, summary, raw_response
 
 ### Types:
@@ -76,7 +76,7 @@ alert_type, summary, raw_response
 ## 4. How to Import & Run the Workflow
 Export the workflow JSON from n8n (Deliverable #1).
 
-In n8n:
+### In n8n:
 
 - Go to Workflows → Import from File
 
@@ -86,7 +86,7 @@ In n8n:
 
 - Run manually or schedule with a Cron node for daily execution.
 
-Check:
+### Check:
 
 - Supabase table for inserted records
 
