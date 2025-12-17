@@ -15,22 +15,24 @@ The workflow demonstrates use of **Code nodes** for custom logic, plus branching
 - Insert the key in the Function (Code) node:
   ```js
   const OPENWEATHER_API_KEY = "your_openweather_api_key";
-Configure units:
 
-TEMP_UNIT = "metric" → Celsius/km/h
+### Configure units:
 
-TEMP_UNIT = "imperial" → Fahrenheit/mph
+- TEMP_UNIT = "metric" → Celsius/km/h
 
-Add cities in the cityList array. Multi‑city support is implemented via looping in the Code node.
+- TEMP_UNIT = "imperial" → Fahrenheit/mph
 
-Supabase API
-Create a Supabase project and obtain your Project URL and API key (Service Role or anon key).
+- Add cities in the cityList array. Multi‑city support is implemented via looping in the Code node.
 
-In the Supabase Insert node (or HTTP Request node), configure headers:
+### Supabase API
+- Create a Supabase project and obtain your Project URL and API key (Service Role or anon key).
 
-http
+## In the Supabase Insert node (or HTTP Request node), configure headers:
+
+- http
 apikey: <your_supabase_api_key>
-Authorization: Bearer <your_supabase_api_key>
+
+- Authorization: Bearer <your_supabase_api_key>
 This authenticates inserts into your Supabase database.
 
 ---
