@@ -56,17 +56,17 @@ Ensure Row Level Security (RLS) is disabled or policies allow inserts.
 ---
 
 ## 3. Email Configuration
-Add an Email node (SMTP, Gmail, or other provider).
+- Add an Email node (SMTP, Gmail, or other provider).
 
-Configure credentials (SMTP server, port, username/password or OAuth).
+- Configure credentials (SMTP server, port, username/password or OAuth).
 
 Map workflow output:
 
-Subject: include alert_type (e.g., Weather Alert: Frost in Boston)
+- Subject: include alert_type (e.g., Weather Alert: Frost in Boston)
 
-Body: insert the summary field for a human‑readable daily report
+- Body: insert the summary field for a human‑readable daily report
 
-Optional: use an IF node to send emails only when alert_type ≠ none.
+- Optional: use an IF node to send emails only when alert_type ≠ none.
 
 ---
 
@@ -75,48 +75,48 @@ Export the workflow JSON from n8n (Deliverable #1).
 
 In n8n:
 
-Go to Workflows → Import from File
+- Go to Workflows → Import from File
 
-Upload the JSON file
+- Upload the JSON file
 
-Verify connections between nodes (Code → Supabase → Email)
+- Verify connections between nodes (Code → Supabase → Email)
 
-Run manually or schedule with a Cron node for daily execution.
+- Run manually or schedule with a Cron node for daily execution.
 
 Check:
 
-Supabase table for inserted records
+- Supabase table for inserted records
 
-Email inbox for alerts
+- Email inbox for alerts
 
-Workflow execution logs for debugging
+- Workflow execution logs for debugging
 
 ---
 
 ## 5. Node Usage
-Code node → custom JavaScript fetches weather data, applies retry logic, enriches with metrics, and outputs JSON
+- Code node → custom JavaScript fetches weather data, applies retry logic, enriches with metrics, and outputs JSON
 
-IF/Switch node → optional branching based on alert_type (e.g., frost, precipitation, heat)
+- IF/Switch node → optional branching based on alert_type (e.g., frost, precipitation, heat)
 
-Supabase Insert node → stores structured weather logs
+- Supabase Insert node → stores structured weather logs
 
-Email node → delivers daily summaries and alerts
+- Email node → delivers daily summaries and alerts
 
 
  ---
    
-## Deliverables
-Exported n8n workflow (.json)
+## 6. Deliverables
+- Exported n8n workflow (.json)
 
-Short README (this document)
+- Short README (this document)
 
-Screenshot of the workflow
+- Screenshot of the workflow
 
 ---
 
-## Notes
-Workflow tested on n8n Community Edition (self‑hosted). Equivalent functionality is available on n8n Cloud (14‑day trial).
+## 7. Notes
+- Workflow tested on n8n Community Edition (self‑hosted). Equivalent functionality is available on n8n Cloud (14‑day trial).
 
-Multi‑city support is implemented via the cityList array in the Code node, replicating cloud functionality.
+- Multi‑city support is implemented via the cityList array in the Code node, replicating cloud functionality.
 
-Supabase API key and OpenWeatherMap API key must be configured before running.
+- Supabase API key and OpenWeatherMap API key must be configured before running.
