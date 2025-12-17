@@ -32,7 +32,7 @@
             },
             {
               "name": "appid",
-              "value": "3b70ecc131dc511161f29f1bae8872f1"
+              "value": "Your Openweather API Key"
             },
             {
               "name": "units",
@@ -75,11 +75,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNibWdpbXBwY215amVxZmt3bW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTYwMDUsImV4cCI6MjA4MTQ5MjAwNX0.ZJ-EhdqOA5UrIDlsjkXO1SYIO23NC8thnmf1WSYSGdU"
+              "value": "your_supabase_api_key"
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNibWdpbXBwY215amVxZmt3bW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTYwMDUsImV4cCI6MjA4MTQ5MjAwNX0.ZJ-EhdqOA5UrIDlsjkXO1SYIO23NC8thnmf1WSYSGdU"
+              "value": "Bearer your_supabase_api_key "
             },
             {
               "name": "Content-Type",
