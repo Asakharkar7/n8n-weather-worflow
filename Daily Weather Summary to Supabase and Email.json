@@ -1,0 +1,264 @@
+{
+  "name": "Daily Weather Summary to Supabase and Email",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 7
+            }
+          ]
+        }
+      },
+      "id": "088c0968-22f6-43dc-825c-2193fc68df2d",
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Dallas,US"
+            },
+            {
+              "name": "appid",
+              "value": "3b70ecc131dc511161f29f1bae8872f1"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            }
+          ]
+        },
+        "options": {
+          "response": {}
+        }
+      },
+      "id": "98d98681-803f-4abd-8372-fe527d51bd1a",
+      "name": "Get Weather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -672,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// -------------------- CONFIG --------------------\n// Toggle: set to true if you want multiple cities, false for single city\nconst multiCityMode = true;\n\n// Define your cities here\nconst cityList = [\n  \"Boston,MA,US\"\n];\n\n// Units: \"metric\" for Celsius/kmh, \"imperial\" for Fahrenheit/mph\nconst TEMP_UNIT = \"metric\";\n\n// Your OpenWeather API key\nconst OPENWEATHER_API_KEY = \"3b70ecc131dc511161f29f1bae8872f1\";\n\n// Retry settings\nconst RETRY_COUNT = 3;   // number of attempts\nconst RETRY_DELAY = 1000; // delay between retries in ms\n// ------------------------------------------------\n\n// Map US cities to their IANA timezones (extend as needed)\nconst timezoneMap = {\n  \"Boston\": \"America/New_York\",\n  \"Lancaster\": \"America/New_York\",\n  \"New York\": \"America/New_York\",\n  \"Philadelphia\": \"America/New_York\",\n  \"Miami\": \"America/New_York\",\n  \"Atlanta\": \"America/New_York\",\n  \"Chicago\": \"America/Chicago\",\n  \"Dallas\": \"America/Chicago\",\n  \"Houston\": \"America/Chicago\",\n  \"Austin\": \"America/Chicago\",\n  \"Minneapolis\": \"America/Chicago\",\n  \"Denver\": \"America/Denver\",\n  \"Phoenix\": \"America/Denver\",\n  \"Salt Lake City\": \"America/Denver\",\n  \"Seattle\": \"America/Los_Angeles\",\n  \"Portland\": \"America/Los_Angeles\",\n  \"Salem\": \"America/Los_Angeles\",\n  \"Los Angeles\": \"America/Los_Angeles\",\n  \"San Francisco\": \"America/Los_Angeles\",\n  \"Anchorage\": \"America/Anchorage\",\n  \"Honolulu\": \"Pacific/Honolulu\",\n  \"San Juan\": \"America/Puerto_Rico\",\n  \"Guam\": \"Pacific/Guam\",\n  \"Pago Pago\": \"Pacific/Pago_Pago\"\n};\n\n// Retry wrapper for HTTP requests\nasync function fetchWithRetry(city, retries = RETRY_COUNT, delay = RETRY_DELAY) {\n  for (let attempt = 1; attempt <= retries; attempt++) {\n    try {\n      const response = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.openweathermap.org/data/2.5/weather',\n        qs: {\n          q: city,\n          units: TEMP_UNIT,\n          appid: OPENWEATHER_API_KEY\n        },\n        json: true\n      });\n      return response;\n    } catch (error) {\n      if (attempt === retries) throw error;\n      await new Promise(res => setTimeout(res, delay));\n    }\n  }\n}\n\nasync function main() {\n  const results = [];\n  const cities = multiCityMode ? cityList : [cityList[0]];\n\n  for (const cityQuery of cities) {\n    const data = await fetchWithRetry.call(this, cityQuery);\n\n    const city = data.name;\n    const temp = data.main?.temp;\n    const humidity = data.main?.humidity;\n    const wind = data.wind?.speed;\n    const windDir = data.wind?.deg;\n    const condition = (data.weather?.[0]?.description || '').toLowerCase();\n\n    const unit = TEMP_UNIT === 'imperial' ? 'F' : 'C';\n    const windUnit = TEMP_UNIT === 'imperial' ? 'mph' : 'km/h';\n\n    // Pick timezone based on city name, fallback to UTC\n    const timezone = timezoneMap[city] || \"UTC\";\n    const run_at = new Date().toLocaleString('sv-SE', { timeZone: timezone }).replace(' ', 'T');\n\n    // Alert detection\n    let alertType = 'none';\n    const precipKeywords = ['rain','snow','drizzle','storm','thunder'];\n    if (precipKeywords.some(k => condition.includes(k))) {\n      alertType = 'precipitation';\n    } else if ((TEMP_UNIT === 'metric' && temp >= 32) || \n               (TEMP_UNIT === 'imperial' && temp >= 90)) {\n      alertType = 'heat';\n    } else if ((TEMP_UNIT === 'metric' && temp <= 0) || \n               (TEMP_UNIT === 'imperial' && temp <= 32)) {\n      alertType = 'frost';\n    }\n\n    // Extra metrics\n    const feelsLike = data.main?.feels_like;\n    const tempMin = data.main?.temp_min;\n    const tempMax = data.main?.temp_max;\n    const pressure = data.main?.pressure;\n    const visibility = data.visibility;\n    const cloudiness = data.clouds?.all;\n    const sunrise = new Date(data.sys?.sunrise * 1000).toLocaleTimeString('en-US', { timeZone: timezone });\n    const sunset = new Date(data.sys?.sunset * 1000).toLocaleTimeString('en-US', { timeZone: timezone });\n\n    const summary = [\n      `Daily Weather - ${city}`,\n      `Temp: ${temp} ${unit}`,\n      `Feels Like: ${feelsLike} ${unit}`,\n      `Min/Max: ${tempMin}/${tempMax} ${unit}`,\n      `Humidity: ${humidity}%`,\n      `Pressure: ${pressure} hPa`,\n      `Visibility: ${visibility} m`,\n      `Cloudiness: ${cloudiness}%`,\n      `Wind: ${wind} ${windUnit} (Direction: ${windDir}°)`,\n      `Condition: ${condition}`,\n      `Sunrise: ${sunrise}`,\n      `Sunset: ${sunset}`,\n      `Alert: ${alertType === 'none' ? 'None' : alertType + ' expected today'}`\n    ].filter(Boolean).join('\\n');\n\n    results.push({\n      json: {\n        run_at,\n        city,\n        temperature: temp,\n        temperature_unit: unit,\n        condition,\n        humidity,\n        wind_speed: wind,\n        wind_direction: windDir,\n        cloudiness,\n        alert_type: alertType,\n        summary,\n        raw_response: JSON.stringify(data),\n        feels_like: feelsLike,\n        temp_min: tempMin,\n        temp_max: tempMax,\n        pressure,\n        visibility,\n        sunrise,\n        sunset\n      }\n    });\n  }\n\n  return results;\n}\n\nreturn main();\n"
+      },
+      "id": "bdccd597-2af6-48f3-a92a-feb6bd059727",
+      "name": "Build Summary & Alerts",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sbmgimppcmyjeqfkwmoe.supabase.co/rest/v1/weather_logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNibWdpbXBwY215amVxZmt3bW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTYwMDUsImV4cCI6MjA4MTQ5MjAwNX0.ZJ-EhdqOA5UrIDlsjkXO1SYIO23NC8thnmf1WSYSGdU"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNibWdpbXBwY215amVxZmt3bW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTYwMDUsImV4cCI6MjA4MTQ5MjAwNX0.ZJ-EhdqOA5UrIDlsjkXO1SYIO23NC8thnmf1WSYSGdU"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "run_at",
+              "value": "={{ $json.run_at }}"
+            },
+            {
+              "name": "temperature",
+              "value": "={{ $json.temperature }}"
+            },
+            {
+              "name": "temperature_unit",
+              "value": "={{ $json.temperature_unit }}"
+            },
+            {
+              "name": "condition",
+              "value": "={{ $json.condition }}"
+            },
+            {
+              "name": "humidity",
+              "value": "={{ $json.humidity }}"
+            },
+            {
+              "name": "wind_speed",
+              "value": "={{ $json.wind_speed }}"
+            },
+            {
+              "name": "alert_type",
+              "value": "={{ $json.alert_type }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $json.summary }}"
+            },
+            {
+              "name": "raw_response",
+              "value": "={{ $json.raw_response }}"
+            },
+            {
+              "name": "wind_direction",
+              "value": "={{ $json.wind_direction }}"
+            },
+            {
+              "name": "feels_like",
+              "value": "={{ $json.feels_like }}"
+            },
+            {
+              "name": "temp_min",
+              "value": "={{ $json.temp_min }}"
+            },
+            {
+              "name": "temp_max",
+              "value": "={{ $json.temp_max }}"
+            },
+            {
+              "name": "visibility",
+              "value": "={{ $json.visibility }}"
+            },
+            {
+              "name": "sunrise",
+              "value": "={{ $json.sunrise }}"
+            },
+            {
+              "name": "sunset",
+              "value": "={{ $json.sunset }}"
+            },
+            {
+              "name": "pressure",
+              "value": "={{ $json.pressure }}"
+            },
+            {
+              "name": "=cloudiness",
+              "value": "={{ $json.cloudiness }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.city }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {}
+        }
+      },
+      "id": "bc4448e3-2c7a-4a25-bf91-f00e1d3cefc5",
+      "name": "Insert into Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -192,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "=aniketsakharkar26@gmail.com",
+        "toEmail": "=krishnasolankii19@gmail.com",
+        "subject": "={{'Daily Weather for ' + $json.city + ' — ' + new Date($json.run_at).toLocaleDateString()}}",
+        "text": "={{$json.summary}}",
+        "options": {}
+      },
+      "id": "96f32aa8-4498-42cb-b1f0-14e3c5ab37d2",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        160
+      ],
+      "webhookId": "21e36042-be77-436f-bcf5-f60eaf832696",
+      "credentials": {
+        "smtp": {
+          "id": "1OycnWdnHYnIvsMC",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Get Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weather": {
+      "main": [
+        [
+          {
+            "node": "Build Summary & Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Summary & Alerts": {
+      "main": [
+        [
+          {
+            "node": "Insert into Supabase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "49e32bb4-b886-4003-a6db-116b76cdbbe1",
+  "meta": {
+    "instanceId": "257ce871fafad6eb1a7c5075d30aca1ad39f86e08a492091720ff82b1b4aba22"
+  },
+  "id": "NPsLhteUEetKPTp0",
+  "tags": []
+}
