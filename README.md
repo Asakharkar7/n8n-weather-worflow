@@ -109,11 +109,11 @@ Export the workflow JSON from n8n (Deliverable #1).
  ---
    
 ## 6. Deliverables
-- Exported n8n workflow (.json)
+- Exported n8n workflow (.json) [Json File](n8n_daily_weather_workflow.json)
 
 - Short README (this document)
 
-- Screenshot of the workflow
+- Screenshot of the workflow  [Workflow](Screenshots/n8n_Workflow_Screenshot.png)
 
 ---
 
